@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-url = "https://google.serper.dev/images"
+url = "https://google.serper.dev/search"
 
 
 def browse(query):
@@ -25,8 +25,8 @@ def browse(query):
     return response.text
 
 
-browse_images = Tool(
+browse_text = Tool(
     func=browse,
-    description="This tool searches the web for images based on a given query",
-    name="browse_images",
+    description="This tool searches the web based on a given query",
+    name="browse_text",
 )
