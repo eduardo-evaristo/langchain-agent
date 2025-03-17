@@ -5,13 +5,13 @@ from llm import llm
 from langchain.agents import initialize_agent
 from langchain_core.messages import HumanMessage, SystemMessage
 import sys
+from flask import Flask, request
+from flask_cors import CORS
 
-messages = [
-    SystemMessage(
-        'Responda em português brasileiro, seja cordial, porém assertiva e concisa. Não use símbolos como: *, #, " em suas respostas. Quando o usuário pedir-te uma imagem, responda o link da que parecer-te mais pertinente.'
-    ),
-    HumanMessage(sys.argv[1]),
-]
+app = Flask(__name__)
+
+# Configure CORS later, if needed
+CORS(app)
 
 # Tools to be used by the agent
 tools = [browse_text, browse_images, browse_news]
@@ -26,5 +26,27 @@ agent = initialize_agent(
     handle_parsing_errors=True,
 )
 
-# agent.run is deprecated
-print(agent.invoke(messages))
+
+@app.route("/agent", methods=["POST"])
+def call_agent():
+    question = request.json["question"]
+    messages = [
+        SystemMessage(
+            'Responda em português brasileiro, seja cordial, porém assertiva e concisa. Não use símbolos como: *, #, " em suas respostas. Quando o usuário pedir-te uma imagem, responda o link da que parecer-te mais pertinente.'
+        ),
+        HumanMessage(question),
+    ]
+    response = agent.invoke(messages)
+    if isinstance(response, dict) and "output" in response:
+        return {"response": response["output"]}  # Access as a dictionary
+    elif hasattr(response, "output"):
+        return {"response": response.output}  # Access as an attribute
+    else:
+        return {
+            "error": "Unexpected response format",
+            "raw_response": str(response),
+        }, 500
+
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5007)
