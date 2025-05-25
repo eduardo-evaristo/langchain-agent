@@ -7,6 +7,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 import sys
 from flask import Flask, request
 from flask_cors import CORS
+import base64
 
 app = Flask(__name__)
 
@@ -46,6 +47,38 @@ def call_agent():
             "error": "Unexpected response format",
             "raw_response": str(response),
         }, 500
+
+
+@app.route("/picture", methods=["POST"])
+def describe_image():
+    question = request.json["question"]
+    weather_info = request.json["weather"]
+    question = f"{question}. Informações: {weather_info}"
+
+    # File we got
+    image_file = request.files["pic"]
+    # Base64'd up version of it
+    image_data = base64.b64encode(image_file.read()).decode("utf-8")
+
+    # Prepare prompt
+    messages = [
+        SystemMessage(
+            'Responda em português brasileiro, seja cordial, porém assertiva e concisa. Não use símbolos como: *, #, " em suas respostas. Descreva a imagem que o usuário te enviar e se necessário ou pertinente use as informações que ele te passar.'
+        ),
+        HumanMessage(
+            content=[
+                {"type": "text", "text": question},
+                {
+                    "type": "image_url",
+                    "image_url": {"url": f"data:image/jpeg;base64,{image_data}"},
+                },
+            ]
+        ),
+    ]
+
+    # Get response from Gemini
+    response = llm.invoke(messages)
+    return {"response": response}
 
 
 if __name__ == "__main__":
