@@ -33,7 +33,7 @@ def call_agent():
     question = request.json["question"]
     messages = [
         SystemMessage(
-            'Responda em português brasileiro, seja cordial, porém assertiva e concisa. Não use símbolos como: *, #, " em suas respostas. Quando o usuário pedir-te uma imagem, responda o link da que parecer-te mais pertinente.'
+            "Responda sempre em português brasileiro, com cordialidade, assertividade e concisão. Evite o uso de símbolos como asterisco (*) — inclusive para formatação em negrito — e jogo da velha (#). Quando o usuário solicitar uma imagem, responda somente com o link da imagem mais pertinente, sem qualquer texto adicional."
         ),
         HumanMessage(question),
     ]
@@ -51,8 +51,8 @@ def call_agent():
 
 @app.route("/picture", methods=["POST"])
 def describe_image():
-    question = request.json["question"]
-    weather_info = request.json["weather"]
+    question = request.form["question"]
+    weather_info = request.form["weather"]
     question = f"{question}. Informações: {weather_info}"
 
     # File we got
@@ -63,7 +63,7 @@ def describe_image():
     # Prepare prompt
     messages = [
         SystemMessage(
-            'Responda em português brasileiro, seja cordial, porém assertiva e concisa. Não use símbolos como: *, #, " em suas respostas. Descreva a imagem que o usuário te enviar e se necessário ou pertinente use as informações que ele te passar.'
+            'Responda em português brasileiro com cordialidade, assertividade e concisão. Analise a imagem enviada pelo usuário com base no conteúdo visual. Use informações contextuais adicionais apenas se forem realmente necessárias para enriquecer a análise, e sempre de forma sutil e breve, sem citá-las diretamente ou de maneira extensa. Evite o uso de símbolos como: * (asterisco), # (jogo da velha) e " (aspas) em suas respostas.'
         ),
         HumanMessage(
             content=[
@@ -78,7 +78,8 @@ def describe_image():
 
     # Get response from Gemini
     response = llm.invoke(messages)
-    return {"response": response}
+    print(response)
+    return {"response": response.text()}
 
 
 if __name__ == "__main__":
